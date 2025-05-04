@@ -116,13 +116,13 @@ export async function processUserMessage(messageText: string, currentSessionId?:
 
         let responseMessageText = geminiText;
         // Use specific type for artifacts array based on our interface
-        let responseArtifacts: BasicTaskResultData['artifacts'] = []; 
+        const responseArtifacts: BasicTaskResultData['artifacts'] = []; 
 
         // --- Attempt to detect and extract Markdown code block --- 
         const codeBlockRegex = /```(?:\w*\n)?([\s\S]*?)```/;
         const match = geminiText.match(codeBlockRegex);
 
-        if (match && match[1]) {
+        if (match?.[1]) {
             const extractedCode = match[1].trim();
             console.log("DEBUG: [Client AI] Extracted code block:", extractedCode);
 

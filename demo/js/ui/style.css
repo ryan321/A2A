@@ -209,6 +209,47 @@ body {
     background-color: #5a6268;
 }
 
+/* Loading Indicator Styles */
+.loading-indicator {
+    margin-bottom: 15px; 
+    margin-right: auto; 
+    padding: 5px 15px; 
+    display: inline-block; 
+    /* Add background and border-radius */
+    background-color: #e9e9e9; /* Same as agent message or slightly lighter */
+    border-radius: 15px; /* Match agent message bubble */
+    border-bottom-left-radius: 0; /* Match agent message shape */
+}
+
+/* Target p within the new container */
+.loading-indicator p {
+    margin: 0; 
+    line-height: 1; 
+}
+
+/* Target ::after within the new container */
+.loading-indicator p::after {
+  display: inline-block;
+  font-size: 2.5em; 
+  vertical-align: middle; 
+  animation: blink 1.5s infinite both;
+  content: '...'; 
+  opacity: 0;
+}
+
+/* Keyframes remain the same */
+@keyframes blink {
+  0% {
+    opacity: .2;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: .2;
+  }
+}
+
 /* Agent Registration Styles */
 .register-agent-form {
     display: flex;

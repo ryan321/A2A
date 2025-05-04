@@ -299,24 +299,39 @@ async function handleRemoveAgent(event: Event) {
 
 // Function to handle sending a message
 async function handleSendMessage() {
-    console.log("DEBUG: handleSendMessage started."); // Log entry
     const chatInput = document.getElementById('chat-input') as HTMLTextAreaElement;
+    const messageList = document.querySelector('.message-list'); // Get message list
 
-    if (chatInput && chatInput.value.trim() !== '') {
+    if (chatInput && chatInput.value.trim() !== '' && messageList) {
         const messageText = chatInput.value.trim();
         appendMessage(messageText, 'user'); 
         chatInput.value = ''; 
 
+        // --- Add Minimal Loading Indicator --- 
+        const loadingElement = document.createElement('div');
+        // Remove message/agent-message classes, add specific loader class
+        loadingElement.classList.add('loading-indicator'); 
+        loadingElement.id = 'loading-indicator'; // Keep ID for removal
+        // Add the paragraph with dots inside
+        const loadingParagraph = document.createElement('p');
+        loadingParagraph.innerHTML = '&nbsp;'; // Keep content for pseudo-element
+        loadingElement.appendChild(loadingParagraph);
+        messageList.appendChild(loadingElement);
+        messageList.scrollTop = messageList.scrollHeight; 
+        // ---
+
         console.log(`DEBUG: [UI] Sending message to Client AI Service. Session: ${currentSessionId}`);
 
-        // Disable input while waiting for response
+        // Disable input ...
         chatInput.disabled = true;
         const sendButton = document.getElementById('send-button') as HTMLButtonElement;
         if (sendButton) sendButton.disabled = true;
 
-        let responseData: JsonRpcResponse | null = null; // Use our simple interface
+        let responseData: JsonRpcResponse | null = null;
+        let errorOccurred = false;
+        let errorMessage = 'Failed to get response from Client AI service.'; // Default error
+
         try {
-            // Call the A2A Client Service backend endpoint
             const serviceResponse = await fetch(CLIENT_AI_SERVICE_URL, {
                 method: 'POST',
                 headers: {
@@ -330,23 +345,29 @@ async function handleSendMessage() {
                 const errorBody = await serviceResponse.text();
                 console.error("Service Error Body:", errorBody);
                 appendMessage(`Error: Service returned status ${serviceResponse.status}`, 'agent');
+                errorMessage = `Error: Service returned status ${serviceResponse.status}`;
+                errorOccurred = true;
             } else {
                  responseData = await serviceResponse.json() as JsonRpcResponse;
                  console.log("DEBUG: [UI] Received response from Client AI Service:", responseData);
             }
-
         } catch (error) {
-            console.error("ERROR: [UI] Failed to fetch from Client AI Service:", error);
-            appendMessage("Error: Could not connect to Client AI service.", 'agent');
+             console.error("ERROR: [UI] Failed to fetch from Client AI Service:", error);
+             errorMessage = "Error: Could not connect to Client AI service.";
+             errorOccurred = true;
+        } finally {
+            // Remove Loading Indicator by ID
+            const loader = document.getElementById('loading-indicator');
+            if(loader) loader.remove();
+
+            // Re-enable input 
+            chatInput.disabled = false;
+            if (sendButton) sendButton.disabled = false;
+            chatInput.focus();
         }
 
-        // Re-enable input
-        chatInput.disabled = false;
-        if (sendButton) sendButton.disabled = false;
-        chatInput.focus();
-
-        // Process response data (logic remains the same)
-        if (responseData) { 
+        // Process response or show error message AFTER loader is removed
+        if (!errorOccurred && responseData) { 
             const result = responseData.result; 
             const error = responseData.error;
             if (result) {
@@ -476,8 +497,9 @@ async function handleSendMessage() {
             } else {
                  appendMessage('Received unexpected response format from service.', 'agent');
             }
-        } 
-        // No need for the final 'else' as network/service errors handled in try/catch
+        } else if (errorOccurred) {
+            appendMessage(errorMessage, 'agent');
+        }
     }
 }
 
