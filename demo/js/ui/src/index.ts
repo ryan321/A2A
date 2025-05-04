@@ -62,6 +62,52 @@ function appendMessage(text: string, sender: 'user' | 'agent') {
     messageList.scrollTop = messageList.scrollHeight;
 }
 
+// --- Event Handlers --- 
+async function handleCopyArtifact(event: Event) {
+    const button = event.target as HTMLButtonElement;
+    const textToCopy = button.dataset.clipboardText;
+    if (!textToCopy) {
+        console.error('No text found to copy for artifact.');
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        button.textContent = 'Copied!';
+        setTimeout(() => { button.textContent = 'Copy'; }, 1500); // Reset button text
+    } catch (err) {
+        console.error('Failed to copy artifact text: ', err);
+        button.textContent = 'Error';
+         setTimeout(() => { button.textContent = 'Copy'; }, 1500); 
+    }
+}
+
+function handleDownloadArtifact(event: Event) {
+    const button = event.target as HTMLButtonElement;
+    const filename = button.dataset.filename;
+    const artifactBlock = button.closest('.artifact-block');
+    const codeElement = artifactBlock?.querySelector('code');
+    const textToDownload = codeElement?.textContent;
+
+    if (!filename || !textToDownload) {
+        console.error('Could not find filename or text for artifact download.');
+        return;
+    }
+
+    try {
+        const blob = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link); // Required for Firefox
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error('Failed to download artifact: ', err);
+    }
+}
+
 // Function to handle sending a message
 async function handleSendMessage() { // Make async
     const chatInput = document.getElementById('chat-input') as HTMLTextAreaElement;
@@ -150,7 +196,71 @@ async function handleSendMessage() { // Make async
                     console.log(`Stored new sessionId: ${currentSessionId}`);
                 }
                 
-                appendMessage(agentMessageText, 'agent');
+                appendMessage(agentMessageText, 'agent'); // Append main agent message first
+
+                // --- Process and Display Artifacts --- 
+                try {
+                    const artifacts = result.artifacts;
+                    if (Array.isArray(artifacts)) {
+                        console.log(`DEBUG: Found ${artifacts.length} artifact(s).`);
+                        for (const artifact of artifacts) {
+                            const artifactName = artifact?.name ?? 'Unnamed Artifact';
+                            const firstPart = artifact?.parts?.[0];
+                            // Check if the first part is a text part and has content
+                            if (firstPart?.type === 'text' && firstPart?.text) {
+                                console.log(`DEBUG: Displaying artifact: ${artifactName}`);
+                                const artifactText = firstPart.text;
+
+                                const artifactElement = document.createElement('div');
+                                artifactElement.classList.add('message', 'agent-message', 'artifact-block');
+                                
+                                const headerElement = document.createElement('div');
+                                headerElement.classList.add('artifact-header');
+
+                                const nameElement = document.createElement('strong');
+                                nameElement.textContent = `Artifact: ${artifactName}`;
+
+                                const buttonGroup = document.createElement('div');
+                                buttonGroup.classList.add('artifact-buttons');
+
+                                const copyButton = document.createElement('button');
+                                copyButton.textContent = 'Copy';
+                                copyButton.classList.add('artifact-copy-btn');
+                                copyButton.dataset.clipboardText = artifactText; // Store text for clipboard
+
+                                const downloadButton = document.createElement('button');
+                                downloadButton.textContent = 'Download';
+                                downloadButton.classList.add('artifact-download-btn');
+                                downloadButton.dataset.filename = artifactName; // Store filename for download
+                                // We will need the text again for download, could store it here too, or retrieve from pre/code
+
+                                buttonGroup.appendChild(copyButton);
+                                buttonGroup.appendChild(downloadButton);
+                                headerElement.appendChild(nameElement);
+                                headerElement.appendChild(buttonGroup);
+                                
+                                const preElement = document.createElement('pre');
+                                const codeElement = document.createElement('code');
+                                const lang = artifactName.split('.').pop();
+                                if (lang) codeElement.classList.add(`language-${lang}`);
+                                codeElement.textContent = artifactText;
+                                
+                                preElement.appendChild(codeElement);
+                                artifactElement.appendChild(headerElement); // Add header
+                                artifactElement.appendChild(preElement);
+                                
+                                const messageList = document.querySelector('.message-list');
+                                if (messageList) {
+                                    messageList.appendChild(artifactElement);
+                                    messageList.scrollTop = messageList.scrollHeight;
+                                }
+                            } else {
+                                console.log(`DEBUG: Skipping artifact ${artifactName} - no text part found.`);
+                            }
+                        }
+                    }
+                } catch (e) { console.error("Error processing artifacts:", e); }
+                // ---
 
             } else if (error) { // Check if error exists
                  const errorMessage = error.message ?? 'Unknown error';
@@ -167,6 +277,8 @@ async function handleSendMessage() { // Make async
 
 // Function to set up event listeners for the current page
 function setupEventListeners(hash: string) {
+    const messageList = document.querySelector('.message-list');
+
     if (hash === '#conversation') {
         const sendButton = document.getElementById('send-button');
         const chatInput = document.getElementById('chat-input');
@@ -183,6 +295,20 @@ function setupEventListeners(hash: string) {
                 }
             });
         }
+
+        // --- Add delegated listeners for artifact buttons --- 
+        if (messageList) {
+            messageList.addEventListener('click', (event) => {
+                const target = event.target as HTMLElement;
+                if (target.classList.contains('artifact-copy-btn')) {
+                    handleCopyArtifact(event);
+                }
+                if (target.classList.contains('artifact-download-btn')) {
+                    handleDownloadArtifact(event);
+                }
+            });
+        }
+        // ---
     }
     // Add listeners for other pages here if needed (e.g., agent card buttons)
 }
