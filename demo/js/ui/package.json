@@ -1,0 +1,25 @@
+{
+  "name": "a2a-js-demo",
+  "version": "1.0.0",
+  "description": "JavaScript/TypeScript implementation of the A2A protocol.",
+  "main": "dist/bundle.js",
+  "scripts": {
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development --watch",
+    "generate-types": "json2ts ../../specification/json/a2a.json > src/types.ts"
+  },
+  "keywords": [
+    "a2a",
+    "protocol",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "json-schema-to-typescript": "^14.0.5",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
