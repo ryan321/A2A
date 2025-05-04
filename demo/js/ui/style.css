@@ -281,26 +281,34 @@ body {
     margin-top: 15px;
 }
 
+/* Change ul to use grid */
 .registered-agent-list {
     list-style: none;
     padding: 0;
+    display: grid;
+    /* Create columns that auto-fill and are at least 250px wide */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+    gap: 20px; /* Spacing between cards */
 }
 
+/* Style li as a card */
 .registered-agent-list li {
-    background-color: #fff; /* Change background to white like a card */
-    padding: 15px; /* Consistent padding */
-    margin-bottom: 12px; 
-    border-radius: 8px; /* Match modal */
-    border: 1px solid #ddd; /* Add subtle border */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Add subtle shadow */
+    background-color: #fff; 
+    padding: 15px; 
+    margin-bottom: 0; /* Grid gap handles spacing */
+    border-radius: 8px; 
+    border: 1px solid #ddd; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08); /* Slightly stronger shadow */
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start; 
+    flex-direction: column; /* Stack content vertically */
+    justify-content: space-between; /* Pushes button to bottom */
+    /* remove min-height if relying on content */
 }
 
 .agent-item-details {
     flex-grow: 1; 
-    margin-right: 15px; 
+    margin-right: 0; /* Remove side margin */
+    margin-bottom: 10px; /* Add space above button */
 }
 
 /* Remove block display override now using <p> tags */
@@ -338,8 +346,10 @@ body {
 }
 
 .remove-agent-btn {
-    padding: 3px 8px;
-    font-size: 0.8em;
+    flex-shrink: 0; 
+    padding: 5px 10px; 
+    /* Align button to the right */
+    align-self: flex-end;
     background-color: #dc3545; /* Red */
     color: white;
     border: none;
