@@ -554,8 +554,8 @@ function setupEventListeners(hash: string) {
         if (registerBtn) {
             registerBtn.addEventListener('click', handleRegisterAgent);
         }
-        // Use delegation for remove buttons
         if (agentListContainer) {
+            // Listener for remove buttons (delegated)
             agentListContainer.addEventListener('click', (event) => {
                 if ((event.target as HTMLElement).classList.contains('remove-agent-btn')) {
                     handleRemoveAgent(event);
@@ -586,18 +586,31 @@ async function renderContent(hash: string) { // Make async for fetching agents
         case '#agents': { 
             title = "Agents";
             try {
-                console.log("DEBUG: [UI] Fetching agent list from backend...");
-                const response = await fetch(AGENT_API_URL);
-                if (!response.ok) {
-                     throw new Error(`Failed to fetch agents: ${response.status}`);
+                console.log("DEBUG: [UI] Fetching agent URL list from backend...");
+                const listResponse = await fetch(AGENT_API_URL);
+                if (!listResponse.ok) {
+                     throw new Error(`Failed to fetch agent URLs: ${listResponse.status}`);
                 }
-                const data = await response.json();
-                console.log("DEBUG: [UI] Received agent list:", data.agents);
-                // Render page with fetched list
-                content = renderAgentsPage(data.agents || []); 
+                const listData = await listResponse.json();
+                const agentUrls: string[] = listData.agents || [];
+                console.log("DEBUG: [UI] Received agent URL list:", agentUrls);
+
+                // Fetch all agent cards concurrently
+                console.log("DEBUG: [UI] Fetching all agent card details...");
+                const agentCardPromises = agentUrls.map(url => fetchAgentCard(url));
+                const agentCardsResults = await Promise.all(agentCardPromises);
+                
+                // Filter out failed fetches (null results) and type the parameter
+                const validAgentCards = agentCardsResults.filter(
+                    (card: SimpleAgentCard | null): card is SimpleAgentCard => card !== null
+                );
+                console.log(`DEBUG: [UI] Successfully fetched ${validAgentCards.length} agent cards.`);
+
+                // Render page with the array of fetched card objects
+                content = renderAgentsPage(validAgentCards); 
             } catch (error) {
-                console.error("ERROR: [UI] Failed to fetch agent list:", error);
-                content = "<p>Error loading agent list. Is the A2A Client Service running?</p>";
+                console.error("ERROR: [UI] Failed to fetch or process agent list/cards:", error);
+                content = "<p>Error loading agent list or details. Is the A2A Client Service running?</p>";
             }
             break;
         } 
@@ -664,5 +677,34 @@ interface SimpleAgentCard {
 
 // Restore state for modal
 let agentCardToRegister: SimpleAgentCard | null = null; 
+
+// --- Constants --- 
+
+// Restore fetchAgentCard function
+/** Fetches the AgentCard from a given base URL */
+async function fetchAgentCard(baseUrl: string): Promise<SimpleAgentCard | null> {
+    console.log(`DEBUG: [UI] Fetching AgentCard for base URL: ${baseUrl}`);
+    const trimmedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const fetchUrl = `${trimmedBaseUrl}/.well-known/agent.json`;
+    console.log(`DEBUG: [UI] Attempting fetch from well-known URL: ${fetchUrl}`);
+    try {
+        const response = await fetch(fetchUrl, { method: 'GET', headers: { 'Accept': 'application/json' } });
+        if (!response.ok) {
+            console.error(`Error fetching agent card from ${fetchUrl}: ${response.status} ${response.statusText}`);
+            return null; // Return null on fetch error
+        }
+        const agentCardData = await response.json() as any;
+        if (typeof agentCardData?.name !== 'string' || typeof agentCardData?.url !== 'string') {
+             console.error(`Fetched data from ${fetchUrl} is not a valid SimpleAgentCard`);
+             return null; // Return null on validation error
+        }
+        const simpleAgentCard: SimpleAgentCard = agentCardData;
+        simpleAgentCard.url = baseUrl; // Ensure URL is the base URL
+        return simpleAgentCard; 
+    } catch (error) {
+        console.error(`Error during agent card fetch from ${fetchUrl}:`, error);
+        return null;
+    }
+}
 
 // --- Constants --- 

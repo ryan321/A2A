@@ -287,22 +287,54 @@ body {
 }
 
 .registered-agent-list li {
-    background-color: #f8f9fa;
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    border: 1px solid #eee;
+    background-color: #fff; /* Change background to white like a card */
+    padding: 15px; /* Consistent padding */
+    margin-bottom: 12px; 
+    border-radius: 8px; /* Match modal */
+    border: 1px solid #ddd; /* Add subtle border */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Add subtle shadow */
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; 
 }
 
-.registered-agent-list code {
+.agent-item-details {
+    flex-grow: 1; 
+    margin-right: 15px; 
+}
+
+/* Remove block display override now using <p> tags */
+/* .agent-item-details strong,
+.agent-item-details small,
+.agent-item-details code {
+    display: block; 
+} */
+
+/* Style paragraphs within the details */
+.agent-item-details p {
+    margin: 0 0 6px 0; /* Space between paragraphs */
+    line-height: 1.4;
+}
+.agent-item-details p:last-child {
+    margin-bottom: 0; /* No margin on last paragraph */
+}
+
+.agent-item-details p strong {
+   font-size: 1.1em;
+   /* margin-right: 5px; /* Already inline */
+}
+
+.agent-item-details p small {
+    color: #555; /* Make description slightly darker */
+    font-size: 0.9em;
+}
+
+.agent-item-details p code {
     font-family: monospace;
     background-color: #e9ecef;
     padding: 2px 5px;
     border-radius: 3px;
-    margin-right: 10px;
+    font-size: 0.85em; 
 }
 
 .remove-agent-btn {
