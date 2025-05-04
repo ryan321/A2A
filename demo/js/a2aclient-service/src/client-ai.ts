@@ -112,29 +112,54 @@ export async function processUserMessage(messageText: string, currentSessionId?:
         const result = await model.generateContent(messageText);
         const response = await result.response;
         const geminiText = response.text();
+        console.log("DEBUG: [Client AI] Received raw response from Gemini:", geminiText);
 
-        console.log("DEBUG: [Client AI] Received response from Gemini:", geminiText);
+        let responseMessageText = geminiText;
+        // Use specific type for artifacts array based on our interface
+        let responseArtifacts: BasicTaskResultData['artifacts'] = []; 
 
-        // Format Gemini response into the structure UI expects
-        const geminiResponse = {
+        // --- Attempt to detect and extract Markdown code block --- 
+        const codeBlockRegex = /```(?:\w*\n)?([\s\S]*?)```/;
+        const match = geminiText.match(codeBlockRegex);
+
+        if (match && match[1]) {
+            const extractedCode = match[1].trim();
+            console.log("DEBUG: [Client AI] Extracted code block:", extractedCode);
+
+            // Use optional chaining for langMatch
+            const langMatch = geminiText.match(/```(\w*)/);
+            const lang = langMatch?.[1] || 'txt'; // Use optional chaining
+            const filename = `gemini_response.${lang || 'txt'}`;
+
+            // Create artifact object
+            responseArtifacts.push({
+                name: filename,
+                parts: [{ type: 'text', text: extractedCode }],
+            });
+
+            responseMessageText = `Generated code artifact: ${filename}`;
+        }
+        // ---
+
+        // Format response for UI (should match JsonRpcResponseData)
+        const finalResponse: JsonRpcResponseData = {
             jsonrpc: '2.0' as const,
-            id: generateLocalResponseId(), // Use local ID for the overall response
+            id: generateLocalResponseId(),
             result: {
-                id: generateLocalResponseId(), // Mimic task ID
-                sessionId: currentSessionId, // Pass session ID through if needed later
+                id: generateLocalResponseId(),
+                sessionId: currentSessionId,
                 status: {
                     state: 'completed',
                     message: {
                         role: 'agent',
-                        parts: [{ type: 'text', text: geminiText }]
+                        parts: [{ type: 'text', text: responseMessageText }] 
                     }
                 },
-                // No history/artifacts from direct Gemini call in this simple format
-                history: [], 
-                artifacts: [] 
+                history: [], // Keep empty for now
+                artifacts: responseArtifacts 
             }
         };
-        return geminiResponse;
+        return finalResponse;
 
     } catch (error) {
         console.error("ERROR: [Client AI] Gemini API call failed:", error);

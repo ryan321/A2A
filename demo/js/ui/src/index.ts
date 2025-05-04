@@ -352,49 +352,50 @@ async function handleSendMessage() {
             if (result) {
                 console.log("DEBUG: Result object exists.");
                 
-                const agentMessageText = (() => {
-                    let text = 'Agent response format not recognized.'; // Default
+                // Revert back to using let here
+                let agentMessageText = 'Agent response format not recognized.'; 
 
-                    // --- Priority 1: Check status.message.parts --- 
-                    try {
-                        const messageText = result.status?.message?.parts?.[0]?.text;
-                        if (messageText && typeof messageText === 'string') {
-                            console.log("DEBUG: Found text in status.message.parts:", messageText);
-                            return messageText; // Found it!
-                        }
-                    } catch (e) { console.error("Error accessing status message parts:", e); }
+                // --- Priority 1: Check status.message.parts --- 
+                try {
+                    const messageText = result.status?.message?.parts?.[0]?.text;
+                    if (messageText && typeof messageText === 'string') {
+                        console.log("DEBUG: Found text in status.message.parts:", messageText);
+                        agentMessageText = messageText; // Assign if found
+                    }
+                } catch (e) { console.error("Error accessing status message parts:", e); }
 
+                // Only check history if not found in status
+                if (agentMessageText === 'Agent response format not recognized.') {
                     // --- Priority 2: Check history (Fallback) --- 
                     try {
-                        const history = result.history; // Access directly
+                        const history = result.history;
                          if (Array.isArray(history) && history.length > 0) {
                             console.log("DEBUG: Checking history...");
                             const lastAgentMessage = [...history].reverse().find(msg => msg?.role === 'agent');
                              if (lastAgentMessage?.parts?.[0]?.text && typeof lastAgentMessage.parts[0].text === 'string') {
                                 console.log("DEBUG: Found text in history:", lastAgentMessage.parts[0].text);
-                                return lastAgentMessage.parts[0].text; // Found it!
+                                agentMessageText = lastAgentMessage.parts[0].text; // Assign if found
                              }
                         }
                     } catch (e) { console.error("Error accessing history parts:", e); }
-
-                    // --- Priority 3: Check artifacts (Simple Check) ---
-                    try {
-                        const artifacts = result.artifacts;
-                        if (Array.isArray(artifacts) && artifacts.length > 0) {
+                }
+                
+                // Only check artifacts if not found previously
+                 if (agentMessageText === 'Agent response format not recognized.') {
+                     // --- Priority 3: Check artifacts (Simple Check) ---
+                     try {
+                         const artifacts = result.artifacts;
+                         if (Array.isArray(artifacts) && artifacts.length > 0) {
                             console.log("DEBUG: Checking artifacts...");
                             const firstArtifactText = artifacts[0]?.parts?.[0]?.text;
                             if (firstArtifactText && typeof firstArtifactText === 'string') {
                                 const artifactName = artifacts[0]?.name ?? 'unknown';
-                                text = `(From Artifact: ${artifactName}) ${firstArtifactText}`;
-                                console.log("DEBUG: Found text in first artifact:", text);
-                                return text; // Found in artifact
+                                agentMessageText = `(From Artifact: ${artifactName}) ${firstArtifactText}`; // Assign if found
                             }
                         }
                     } catch (e) { console.error("Error accessing artifact parts:", e); }
-
-                    return text; // Return default or text found in fallbacks
-                })(); 
-
+                }
+                
                 // Store sessionId (accessed via BasicTaskResult type)
                 const sessionId = result.sessionId;
                 if (sessionId && !currentSessionId) { // Already checked sessionId is string above
@@ -402,7 +403,7 @@ async function handleSendMessage() {
                     console.log(`Stored new sessionId: ${currentSessionId}`);
                 }
                 
-                appendMessage(agentMessageText, 'agent'); // Append main agent message first
+                appendMessage(agentMessageText, 'agent'); // Append the final determined text
 
                 // --- Process and Display Artifacts --- 
                 try {
