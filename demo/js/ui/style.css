@@ -87,6 +87,12 @@ body {
     background-color: #0056b3;
 }
 
+/* Style for disabled chat button */
+.agent-card button.chat-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
 /* Conversation Page Styles */
 .chat-container {
     display: flex;
@@ -201,4 +207,148 @@ body {
 
 .artifact-buttons button:hover {
     background-color: #5a6268;
+}
+
+/* Agent Registration Styles */
+.register-agent-form {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+#agent-url-input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#register-agent-btn {
+    padding: 8px 15px;
+    background-color: #28a745; /* Green */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#register-agent-btn:hover {
+    background-color: #218838;
+}
+
+.agent-list-container {
+    margin-top: 15px;
+}
+
+.registered-agent-list {
+    list-style: none;
+    padding: 0;
+}
+
+.registered-agent-list li {
+    background-color: #f8f9fa;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.registered-agent-list code {
+    font-family: monospace;
+    background-color: #e9ecef;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-right: 10px;
+}
+
+.remove-agent-btn {
+    padding: 3px 8px;
+    font-size: 0.8em;
+    background-color: #dc3545; /* Red */
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.remove-agent-btn:hover {
+    background-color: #c82333;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
+    z-index: 100; /* Ensure it's on top */
+}
+
+.modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    z-index: 101;
+    min-width: 300px;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.agent-card-details p {
+    margin: 5px 0;
+    line-height: 1.4;
+}
+
+.agent-card-details code {
+    font-family: monospace;
+    background-color: #e9ecef;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.modal-buttons {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+
+.modal-buttons button {
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+    border: 1px solid #ccc;
+}
+
+#modal-cancel-btn {
+    background-color: #eee;
+}
+#modal-cancel-btn:hover {
+    background-color: #ddd;
+}
+
+#modal-confirm-register-btn {
+    background-color: #007bff; /* Blue */
+    color: white;
+    border-color: #007bff;
+}
+#modal-confirm-register-btn:hover {
+    background-color: #0056b3;
 } 
