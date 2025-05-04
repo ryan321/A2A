@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack --mode=production",
     "dev": "webpack --mode=development --watch",
-    "generate-types": "json2ts ../../specification/json/a2a.json > src/types.ts"
+    "generate-types": "quicktype ../../../specification/json/a2a.json -o src/types.ts --just-types"
   },
   "keywords": [
     "a2a",
@@ -16,7 +16,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "json-schema-to-typescript": "^14.0.5",
+    "quicktype": "^23.0.86",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
     "webpack": "^5.91.0",
